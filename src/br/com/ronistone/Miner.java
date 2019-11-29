@@ -12,21 +12,49 @@ public class Miner {
     private long power;
     private Block chain;
     private Set<Miner> pairs;
+    private Boolean needPropagate;
+    private Statistics statistics;
+    private long lastStepPropagate;
 
-    public Miner(long power) {
+    public Miner(long power, Statistics statistics) {
         this.id = UUID.randomUUID();
         this.power = power;
         this.chain = null;
         this.pairs = new HashSet<>();
+        this.needPropagate = false;
+        this.statistics = statistics;
+        this.lastStepPropagate = Long.MIN_VALUE;
     }
 
-    public Boolean mine(Oracle oracle){
+    public Boolean mine(Oracle oracle) {
         Optional<Block> lastBlock = oracle.iWillMine(power, chain);
-        lastBlock.ifPresent( block -> chain = block );
+        lastBlock.ifPresent( block -> {
+            chain = block;
+            needPropagate = true;
+        });
         return lastBlock.isPresent();
     }
 
+    public void propagate(long step){
+        if(needPropagate && step > lastStepPropagate){
+            pairs.forEach(miner -> miner.receiveChain(chain, step));
+            needPropagate = false;
+            lastStepPropagate = step;
+        }
+    }
 
+    public void receiveChain(Block newChain, long step){
+
+        if(chain == null || newChain.getHeight() > chain.getHeight()){
+            chain = newChain;
+            needPropagate = true;
+//            System.out.println("I receive a new chain with height=" + chain.getHeight());
+        } else if(newChain.getHeight() == chain.getHeight() && !chain.equals(newChain)){
+//            System.out.println("We Have a fork!!!");
+            statistics.addBlockCollision(chain, newChain, step);
+        }
+
+    }
 
     public Block getChain() {
         return chain;

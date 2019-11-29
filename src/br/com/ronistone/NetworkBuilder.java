@@ -21,7 +21,7 @@ public class NetworkBuilder {
         miners = new ArrayList<>();
         LongStream.range(0, numOfMiners)
             .forEach(i -> {
-                        Miner miner = new Miner(oracle.calculateProcessPower());
+                        Miner miner = new Miner(oracle.calculateProcessPower(), oracle.getStatistics());
                         mountConnections(miner, oracle.calculatePairsToConnect(miners.size()));
                         miners.add(miner);
             }

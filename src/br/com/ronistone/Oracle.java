@@ -9,18 +9,19 @@ import java.util.Set;
 
 public class Oracle {
 
-    private long difficult;
+    private double difficult;
+    private Statistics statistics;
 
-    public Oracle(){
+    public Oracle(Statistics statistics){
         generateDifficult();
+        this.statistics = statistics;
     }
 
     public long calculateProcessPower(){
         return Constants.MIN_POWER + (long) (Math.random() * (Constants.MAX_POWER - Constants.MIN_POWER));
     }
-    private long generateDifficult(){
+    private void generateDifficult(){
         difficult = Constants.MIN_DIFFICULT + (long) (Math.random() * (Constants.MAX_DIFFICULT - Constants.MIN_DIFFICULT));
-        return difficult;
     }
 
     public List<Integer> calculatePairsToConnect(int actualMax) {
@@ -39,7 +40,7 @@ public class Oracle {
 
     public Optional<Block> iWillMine(long power, Block chain) {
         Random random = new Random();
-        if(random.nextDouble() < ((double) power / (double) difficult)){
+        if(random.nextDouble() < ((double) power / difficult)){
             if(chain == null){
                 return Optional.of(new Block());
             } else {
@@ -48,5 +49,14 @@ public class Oracle {
         }
 
         return Optional.empty();
+    }
+
+    public Statistics getStatistics() {
+        return statistics;
+    }
+
+    public void recalculateDifficult(long stepsBetweenMine) {
+        difficult = difficult * ((double)Constants.STEPS_BETWEEN_MINE / ((double)stepsBetweenMine)) * ((double)Constants.STEPS_BETWEEN_MINE / ((double)stepsBetweenMine));
+//        System.out.println("new Difficult: " + difficult);
     }
 }

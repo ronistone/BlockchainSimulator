@@ -5,7 +5,7 @@ import java.util.UUID;
 public class Block {
 
     private UUID id;
-    private int height;
+    private long height;
     private Block lastBlock;
 
     public Block(Block lastBlock) {
@@ -23,7 +23,7 @@ public class Block {
         return id;
     }
 
-    public int getHeight() {
+    public long getHeight() {
         return height;
     }
 

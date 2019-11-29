@@ -11,7 +11,7 @@ public class Simulation {
 
     public Simulation(long numOfMiners){
         statistics = new Statistics();
-        oracle = new Oracle();
+        oracle = new Oracle(statistics);
         NetworkBuilder networkBuilder = new NetworkBuilder(oracle);
         miners = networkBuilder.buildMiners(numOfMiners);
     }
@@ -22,20 +22,27 @@ public class Simulation {
 
         List<Miner> hasMine;
 
-        long lastMine = steps;
-        while(steps > 0){
+        long lastMine = 0;
+        for(long i=1; i <= steps;i++){
 
             hasMine = miners.stream()
                         .parallel()
                         .filter(miner -> miner.mine(oracle))
                         .collect(Collectors.toList());
             if(!hasMine.isEmpty()){
-                statistics.addStepToMine((lastMine - steps));
-                System.out.println("Miners has mine: steps to mine - " + (lastMine - steps));
-                hasMine.forEach(miner -> System.out.println(miner.getId() + ": I Mine -> " + miner.getChain().getHeight()));
-                lastMine = steps;
+                statistics.addStepToMine((i - lastMine));
+                oracle.recalculateDifficult((i - lastMine));
+//                System.out.println("Miners has mine: steps to mine - " + (i - lastMine));
+//                hasMine.forEach(miner -> {
+//                    System.out.println(miner.getId() + ": I Mine -> " + miner.getChain().getHeight());
+//                });
+                lastMine = i;
             }
-            steps--;
+            long finalSteps = i;
+            miners.forEach(miner -> miner.propagate(finalSteps));
+            if(i%10000==0){
+                System.out.println("step " + i + "...");
+            }
         }
         statistics.printStatistics();
 
